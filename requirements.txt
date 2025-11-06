@@ -1,0 +1,51 @@
+# Python Requirements for Raspberry Pi (Linux Bookworm)
+# Install with: pip3 install -r requirements.txt
+
+# Core FastAPI and ASGI server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=12.0
+
+# Database (SQLAlchemy for backend)
+sqlalchemy>=2.0.0
+
+# Data validation and settings
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# File handling
+python-multipart>=0.0.6
+aiofiles>=23.2.0
+
+# HTTP client (for backend to communicate with detection service)
+httpx>=0.25.0
+
+# Security (JWT, password hashing)
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# System monitoring
+psutil>=5.9.0
+
+# ONNX Runtime (CPU version for Raspberry Pi)
+# Note: For RPI, use CPU version. GPU acceleration requires additional setup.
+onnxruntime>=1.16.0
+
+# Computer Vision and Image Processing
+numpy>=1.24.0
+opencv-python>=4.8.0
+pillow>=10.0.0
+
+# Build tools (for compiling packages)
+setuptools>=65.0
+wheel>=0.40.0
+
+# Optional: Development tools (uncomment if needed)
+# pytest>=7.4.0
+# pytest-asyncio>=0.21.0
+# black>=23.0.0
+# flake8>=6.0.0
+
