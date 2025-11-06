@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["event_id", "camera_id", "model", "type", "cls", "conf", "t_start"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "description": "Unique event identifier"
+    },
+    "camera_id": {
+      "type": "string",
+      "description": "Camera or source identifier"
+    },
+    "model": {
+      "type": "string",
+      "description": "Model name that generated this detection"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["intrusion", "tripwire", "loitering", "fire", "face_known", "face_unknown", "general"],
+      "description": "Event type classification"
+    },
+    "zone": {
+      "type": "string",
+      "description": "Zone name where event occurred (optional)"
+    },
+    "cls": {
+      "type": "string",
+      "description": "Detected class name"
+    },
+    "track_id": {
+      "type": "number",
+      "description": "Tracking ID for this object"
+    },
+    "conf": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Confidence score"
+    },
+    "t_start": {
+      "type": "number",
+      "description": "Unix timestamp of event start"
+    },
+    "t_end": {
+      "type": ["number", "null"],
+      "description": "Unix timestamp of event end (null if ongoing)"
+    },
+    "snapshot_path": {
+      "type": ["string", "null"],
+      "description": "Path to snapshot image"
+    },
+    "video_ref": {
+      "type": ["string", "null"],
+      "description": "Path to video clip reference"
+    },
+    "bbox_xyxy": {
+      "type": "array",
+      "items": {"type": "number"},
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "Bounding box [x1, y1, x2, y2]"
+    }
+  }
+}
+

@@ -1,0 +1,102 @@
+.sos-button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sos-button:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+.sos-button.active {
+  background: #27ae60;
+  animation: pulse 1s infinite;
+}
+
+.sos-button.active:hover {
+  background: #229954;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(231, 76, 60, 0.6);
+  }
+}
+
+.sos-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.sos-confirm-dialog {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.sos-confirm-dialog h3 {
+  margin: 0 0 12px 0;
+  color: #e74c3c;
+  font-size: 18px;
+}
+
+.sos-confirm-dialog p {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.sos-confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.sos-confirm-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sos-confirm-btn.confirm {
+  background: #e74c3c;
+  color: white;
+}
+
+.sos-confirm-btn.confirm:hover {
+  background: #c0392b;
+}
+
+.sos-confirm-btn.cancel {
+  background: #95a5a6;
+  color: white;
+}
+
+.sos-confirm-btn.cancel:hover {
+  background: #7f8c8d;
+}

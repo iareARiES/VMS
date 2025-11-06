@@ -1,0 +1,24 @@
+{
+  "ts": 1730874321.23,
+  "frame_idx": 1205,
+  "boxes": [
+    {
+      "id": 42,
+      "cls": "person",
+      "conf": 0.87,
+      "xyxy": [100, 200, 300, 400],
+      "zone": "Zone1",
+      "event": "intrusion_start"
+    },
+    {
+      "id": 43,
+      "cls": "car",
+      "conf": 0.92,
+      "xyxy": [500, 100, 700, 300],
+      "zone": null,
+      "event": null
+    }
+  ],
+  "fps": 11.8
+}
+

@@ -1,0 +1,15 @@
+[Unit]
+Description=Intrusion Detection Frontend
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/intrusion-suite/frontend
+ExecStart=/usr/bin/npm run preview
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

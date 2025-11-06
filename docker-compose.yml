@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./models:/app/models
+    environment:
+      - DB_URL=sqlite:///app/storage/db/events.sqlite
+      - DETECTION_SERVICE_URL=http://detection-service:8010
+    depends_on:
+      - detection-service
+
+  detection-service:
+    build: ./detection-service
+    ports:
+      - "8010:8010"
+    volumes:
+      - ./storage:/app/storage
+      - ./models:/app/models
+    environment:
+      - INFER_DEVICE=onnx_cpu
+      - TARGET_FPS=12
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_BACKEND_BASE=http://localhost:8000
+    depends_on:
+      - backend
+

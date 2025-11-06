@@ -1,0 +1,55 @@
+.health-page {
+  max-width: 1400px;
+}
+
+.health-page h1 {
+  margin-bottom: 30px;
+  color: #fff;
+}
+
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.health-card {
+  background: #1a1f3a;
+  border: 1px solid #2a2f4a;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.health-label {
+  color: #b0b0b0;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.health-value {
+  color: #4a9eff;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.health-bar {
+  width: 100%;
+  height: 8px;
+  background: #0a0e27;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.health-bar-fill {
+  height: 100%;
+  background: #4a9eff;
+  transition: width 0.3s;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #b0b0b0;
+}
+

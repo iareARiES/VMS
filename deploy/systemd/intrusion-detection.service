@@ -1,0 +1,16 @@
+[Unit]
+Description=Intrusion Detection Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/intrusion-suite/detection-service
+Environment="PATH=/home/pi/intrusion-suite/detection-service/.venv/bin"
+ExecStart=/home/pi/intrusion-suite/detection-service/.venv/bin/uvicorn detectsvc.main:app --host 0.0.0.0 --port 8010
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["name", "type", "enabled"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Model filename (e.g., yolo11npRETRAINED.onnx)"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["coco", "face", "fire", "custom"],
+      "description": "Model category"
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether model is active"
+    },
+    "conf": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.35,
+      "description": "Confidence threshold"
+    },
+    "iou": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.45,
+      "description": "IoU threshold for NMS"
+    },
+    "labels": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "List of class labels this model can detect"
+    },
+    "enabled_classes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "description": "Per-class toggle map (class_name -> enabled)"
+    }
+  }
+}
+

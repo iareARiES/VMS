@@ -1,0 +1,85 @@
+# Intrusion Detection System - Requirements for Raspberry Pi
+# Python >= 3.9 required
+# Install with: pip install -r requirements.txt
+
+# ============================================
+# Core Web Framework (Backend + Detection Service)
+# ============================================
+fastapi>=0.104.0,<0.115.0
+uvicorn[standard]>=0.24.0,<0.32.0
+websockets>=12.0,<14.0
+pydantic>=2.5.0,<3.0.0
+pydantic-settings>=2.1.0,<3.0.0
+python-multipart>=0.0.6,<1.0.0
+python-dotenv>=1.0.0,<2.0.0
+
+# ============================================
+# Database (Backend)
+# ============================================
+sqlalchemy>=2.0.0,<3.0.0
+
+# ============================================
+# HTTP Client (Backend)
+# ============================================
+httpx>=0.25.0,<0.28.0
+
+# ============================================
+# File Handling (Backend)
+# ============================================
+aiofiles>=23.2.0,<25.0.0
+
+# ============================================
+# Authentication (Backend - Optional)
+# ============================================
+python-jose[cryptography]>=3.3.0,<4.0.0
+passlib[bcrypt]>=1.7.4,<2.0.0
+
+# ============================================
+# System Monitoring (Backend)
+# ============================================
+psutil>=5.9.0,<6.0.0
+
+# ============================================
+# Machine Learning / YOLO Detection
+# ============================================
+# ONNX Runtime - CPU version for Raspberry Pi (ARM compatible)
+# Note: For Raspberry Pi, use the CPU version (not GPU)
+onnxruntime>=1.16.0,<2.0.0
+
+# ============================================
+# Computer Vision & Image Processing
+# ============================================
+# OpenCV - works on Raspberry Pi ARM architecture
+opencv-python>=4.8.0,<5.0.0
+# Pillow for image processing
+pillow>=10.0.0,<11.0.0
+
+# ============================================
+# Numerical Computing
+# ============================================
+# NumPy - ARM compatible version
+numpy>=1.24.0,<2.0.0
+
+# ============================================
+# Additional Utilities
+# ============================================
+# For UUID generation
+# (uuid is built-in, but keeping for reference)
+
+# For JSON handling
+# (json is built-in)
+
+# For path handling
+# (pathlib is built-in)
+
+# For async operations
+# (asyncio is built-in)
+
+# ============================================
+# Development Dependencies (Optional)
+# ============================================
+# Uncomment if you need development tools:
+# pytest>=7.4.0
+# black>=23.0.0
+# flake8>=6.0.0
+
