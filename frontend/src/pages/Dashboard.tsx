@@ -1,29 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
 import LiveView from '../components/LiveView'
 import RightSidebar from '../components/RightSidebar'
-import StepIndicator from '../components/StepIndicator'
 import { WebSocketClient, DetectionFrame } from '../api/sockets'
 import { systemApi, modelsApi } from '../api/backend'
 import './Dashboard.css'
-
-const CONFIG_STEPS = [
-  'Step 1: Video Analytic Settings',
-  'Step 2: Event Schedule Settings',
-  'Step 3: Alert Settings and Finish'
-]
 
 export default function Dashboard() {
   const [fps, setFps] = useState(5)
   const [detections, setDetections] = useState<DetectionFrame | null>(null)
   const [isDetecting, setIsDetecting] = useState(false)
-  const [currentStep, setCurrentStep] = useState(1)
   const [selectedClasses, setSelectedClasses] = useState<string[]>([])
   const [selectedModels, setSelectedModels] = useState<string[]>([])
   const [modelClassSelections, setModelClassSelections] = useState<Record<string, string[]>>({}) // model name -> selected classes
-  const [confidence, setConfidence] = useState(0.35)
   const [alertInterval, setAlertInterval] = useState(1)
-  const [saveImage, setSaveImage] = useState(false)
-  const [learningBased, setLearningBased] = useState(true)
   const wsRef = useRef<WebSocketClient | null>(null)
   const enabledModelsRef = useRef<string[]>([])
   const selectedClassesRef = useRef<string[]>([])
@@ -43,9 +32,11 @@ export default function Dashboard() {
           const currentEnabled = enabledModelsRef.current
           const modelClassSelections = modelClassSelectionsRef.current
           
-          // Debug logging (only occasionally)
+          // Debug logging
           if (data.frame_idx % 30 === 0) {
-            console.log(`[Dashboard] Received ${data.boxes.length} boxes, Enabled models:`, currentEnabled, 'Class selections:', modelClassSelections)
+            console.log(`📦 [Frame ${data.frame_idx}] Received ${data.boxes.length} raw boxes`)
+            console.log(`   Enabled models:`, currentEnabled)
+            console.log(`   Class selections:`, modelClassSelections)
           }
           
           // Filter boxes: only from enabled models AND only selected classes for that model
@@ -158,9 +149,16 @@ export default function Dashboard() {
       } catch {}
       setTimeout(async () => {
         try { 
-          await systemApi.startDetection() 
-        } catch (e) {
-          console.error('Failed to start detection:', e)
+          console.log('🚀 Starting detection with models:', enabledModelsMeta.map(m => m.name))
+          console.log('📋 Class selections:', modelSelections)
+          const result = await systemApi.startDetection()
+          console.log('✅ Detection started:', result)
+          setIsDetecting(true)
+        } catch (e: any) {
+          console.error('❌ Failed to start detection:', e)
+          const errorMsg = e?.response?.data?.detail || e?.message || 'Unknown error'
+          console.error('Error details:', errorMsg)
+          setIsDetecting(false)
         }
       }, 300)
     }
@@ -176,8 +174,6 @@ export default function Dashboard() {
   
   return (
     <div className="dashboard-vms">
-      <StepIndicator currentStep={currentStep} steps={CONFIG_STEPS} />
-      
       <div className="dashboard-main">
         <div className="video-section">
           <LiveView detections={detections} />
@@ -215,16 +211,10 @@ export default function Dashboard() {
             }))
             setDetections(null)
           }}
-          confidence={confidence}
-          onConfidenceChange={setConfidence}
           alertInterval={alertInterval}
           onAlertIntervalChange={setAlertInterval}
           fps={fps}
           onFpsChange={setFps}
-          saveImage={saveImage}
-          onSaveImageChange={setSaveImage}
-          learningBased={learningBased}
-          onLearningBasedChange={setLearningBased}
         />
       </div>
     </div>

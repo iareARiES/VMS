@@ -219,101 +219,124 @@ async def get_status():
 
 
 async def detection_loop():
-    """Main detection loop - optimized for low latency."""
+    """Main detection loop - maximum raw inference performance."""
     global frame_count, capture, is_running
     
     # Performance tracking
-    last_frame_time = time.time()
-    frame_interval = 1.0 / settings.target_fps
+    loop_count = 0
+    perf_start = time.time()
+    
+    # Cache enabled models to avoid repeated registry lookups (major bottleneck)
+    cached_enabled_models = []
+    cache_refresh_counter = 0
+    cache_refresh_interval = 100  # Refresh every 100 frames
     
     while is_running and capture:
-        # Get enabled models fresh each iteration to handle model toggling
-        enabled_models = registry.get_enabled_models()
+        # Refresh model cache occasionally instead of every iteration
+        if cache_refresh_counter % cache_refresh_interval == 0:
+            cached_enabled_models = registry.get_enabled_models()
+            if not cached_enabled_models:
+                await asyncio.sleep(0.01)
+                cache_refresh_counter += 1
+                continue
         
-        # Skip if no models enabled
-        if not enabled_models:
-            await asyncio.sleep(0.1)
-            continue
+        cache_refresh_counter += 1
         
         try:
-            # Read frame (non-blocking, drops old frames if buffer is full)
+            # Read frame - native OpenCV style
             frame = capture.read()
             if frame is None:
-                await asyncio.sleep(0.01)  # Very short sleep if no frame
-                continue
+                continue  # No sleep - keep trying at max speed
             
-            timestamp = time.time()
             frame_count += 1
+            loop_count += 1
             
-            # Skip frames if needed (but still read to avoid buffering)
+            # Skip frames if needed 
             if settings.frame_skip > 1 and frame_count % settings.frame_skip != 0:
-                # Still read next frame to avoid buffer buildup
                 continue
             
-            # Run inference
-            try:
-                detections = inference_pipeline.infer_frame(frame, enabled_models)
-            except Exception as e:
-                import traceback
-                error_trace = traceback.format_exc()
-                print(f"Error in inference: {e}")
-                print(f"Traceback: {error_trace}")
-                await asyncio.sleep(0.01)  # Short sleep on error
-                continue
-            
-            # Track objects
-            tracked = tracker.update(detections, timestamp)
-            
-            # Check zones
-            frame_h = frame.shape[0] if frame is not None else 0
-            frame_w = frame.shape[1] if frame is not None else 0
-            frame_data = {
-                "ts": timestamp,
-                "frame_idx": frame_count,
-                "boxes": [],
-                "fps": 0.0,
-                "width": frame_w,
-                "height": frame_h
-            }
-            
-            for det in tracked:
-                zone_info = zone_checker.check_detection(det) if zone_checker else None
+            # PURE INFERENCE MODE - Skip all non-essential processing for max speed
+            if settings.raw_inference_mode:
+                # Only run inference - skip tracking, zones, but keep lightweight WebSocket
+                detections = inference_pipeline.infer_frame_fast(frame, cached_enabled_models)
                 
-                box_data = {
-                    "id": getattr(det, 'track_id', 0),
-                    "cls": det.cls,
-                    "conf": det.conf,
-                    "xyxy": list(det.bbox),
-                    "model": getattr(det, 'model_name', None),
-                    "zone": zone_info["zone_name"] if zone_info else None,
-                    "event": zone_info["type"] if zone_info else None
+                # Lightweight WebSocket broadcast (minimal overhead)
+                if ws_connections:  # Only if there are connections
+                    frame_h, frame_w = frame.shape[:2]
+                    frame_data = {
+                        "ts": time.time(),
+                        "frame_idx": frame_count,
+                        "boxes": [{
+                            "id": 0,
+                            "cls": det.cls,
+                            "conf": det.conf,
+                            "xyxy": list(det.bbox),
+                            "model": getattr(det, 'model_name', None)
+                        } for det in detections],
+                        "fps": 0.0,
+                        "width": frame_w,
+                        "height": frame_h
+                    }
+                    # Fire-and-forget broadcast (non-blocking)
+                    asyncio.create_task(broadcast_detections(frame_data))
+                
+                # Performance logging (very minimal)
+                if loop_count % 500 == 0:  # Every 500 frames
+                    elapsed = time.time() - perf_start
+                    fps = loop_count / elapsed if elapsed > 0 else 0
+                    print(f"RAW INFERENCE FPS: {fps:.1f}")
+                
+                # Ultra-minimal sleep (almost zero overhead)
+                if loop_count % 10 == 0:  # Only sleep every 10th frame
+                    await asyncio.sleep(0.0001)
+            else:
+                # Full processing mode (original behavior)
+                timestamp = time.time()
+                detections = inference_pipeline.infer_frame(frame, cached_enabled_models)
+                
+                # Track objects
+                tracked = tracker.update(detections, timestamp)
+                
+                # Check zones
+                frame_h, frame_w = frame.shape[:2]
+                frame_data = {
+                    "ts": timestamp,
+                    "frame_idx": frame_count,
+                    "boxes": [],
+                    "fps": 0.0,
+                    "width": frame_w,
+                    "height": frame_h
                 }
-                frame_data["boxes"].append(box_data)
-            
-            # Calculate FPS
-            if start_time:
-                elapsed = timestamp - start_time
-                frame_data["fps"] = frame_count / elapsed if elapsed > 0 else 0.0
-            
-            # Broadcast to WebSocket (non-blocking)
-            await broadcast_detections(frame_data)
-            
-            # Adaptive sleep: only sleep if we're ahead of schedule
-            current_time = time.time()
-            elapsed_since_last = current_time - last_frame_time
-            sleep_time = frame_interval - elapsed_since_last
-            
-            if sleep_time > 0:
-                await asyncio.sleep(sleep_time)
-            # If we're behind schedule, don't sleep - process next frame immediately
-            
-            last_frame_time = time.time()
+                
+                for det in tracked:
+                    zone_info = zone_checker.check_detection(det) if zone_checker else None
+                    
+                    box_data = {
+                        "id": getattr(det, 'track_id', 0),
+                        "cls": det.cls,
+                        "conf": det.conf,
+                        "xyxy": list(det.bbox),
+                        "model": getattr(det, 'model_name', None),
+                        "zone": zone_info["zone_name"] if zone_info else None,
+                        "event": zone_info["type"] if zone_info else None
+                    }
+                    frame_data["boxes"].append(box_data)
+                
+                # Calculate FPS
+                if start_time:
+                    elapsed = timestamp - start_time
+                    frame_data["fps"] = frame_count / elapsed if elapsed > 0 else 0.0
+                
+                # Broadcast to WebSocket (fire-and-forget)
+                asyncio.create_task(broadcast_detections(frame_data))
+                
+                # Minimal sleep
+                await asyncio.sleep(settings.min_sleep_time)
+                
         except Exception as e:
-            import traceback
-            error_trace = traceback.format_exc()
-            print(f"Error in detection loop: {e}")
-            print(f"Traceback: {error_trace}")
-            await asyncio.sleep(0.1)
+            # Minimal error handling for maximum speed
+            if frame_count % 100 == 0:  # Only log every 100 errors
+                print(f"Detection error: {e}")
             continue
 
 

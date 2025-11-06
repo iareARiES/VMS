@@ -5,12 +5,6 @@ import './RightSidebar.css'
 interface RightSidebarProps {
   selectedClasses: string[]
   onClassesChange: (classes: string[]) => void
-  confidence: number
-  onConfidenceChange: (value: number) => void
-  saveImage: boolean
-  onSaveImageChange: (value: boolean) => void
-  learningBased: boolean
-  onLearningBasedChange: (value: boolean) => void
   selectedModels: string[]
   onModelsChange: (models: string[]) => void
   onDetectionRestart?: () => void
@@ -32,12 +26,6 @@ const OBJECT_CLASSES = [
 export default function RightSidebar({
   selectedClasses,
   onClassesChange,
-  confidence,
-  onConfidenceChange,
-  saveImage,
-  onSaveImageChange,
-  learningBased,
-  onLearningBasedChange,
   selectedModels,
   onModelsChange,
   onDetectionRestart,
@@ -51,7 +39,6 @@ export default function RightSidebar({
 }: RightSidebarProps) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     analytics: true,
-    defaults: true,
     modelSelection: true,
     zoneSettings: false,
     shapeProps: false,
@@ -139,72 +126,6 @@ export default function RightSidebar({
           )}
         </div>
 
-        {/* Default Settings */}
-        <div className="config-section">
-          <div className="section-header" onClick={() => toggleSection('defaults')}>
-            <span>Default Settings</span>
-            <span className="toggle-icon">{expandedSections.defaults ? '−' : '+'}</span>
-          </div>
-          {expandedSections.defaults && (
-            <div className="section-content">
-              <div className="config-item">
-                <label>Confidence Threshold</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={confidence}
-                  onChange={(e) => onConfidenceChange(parseFloat(e.target.value))}
-                />
-                <div className="config-hint">Range: 0.0 - 1.0 (Current: {(confidence * 100).toFixed(0)}%)</div>
-              </div>
-              <div className="config-item">
-                <label>IoU Threshold</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  defaultValue="0.45"
-                />
-                <div className="config-hint">Range: 0.0 - 1.0</div>
-              </div>
-              <div className="config-item checkbox-item">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={saveImage}
-                    onChange={(e) => onSaveImageChange(e.target.checked)}
-                  />
-                  Save Image on Detection
-                </label>
-              </div>
-              <div className="config-item checkbox-item">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={learningBased}
-                    onChange={(e) => onLearningBasedChange(e.target.checked)}
-                  />
-                  Learning Based Detection
-                </label>
-              </div>
-              <div className="config-item checkbox-item">
-                <label>
-                  <input type="checkbox" defaultChecked />
-                  Enable Tracking
-                </label>
-              </div>
-              <div className="config-item checkbox-item">
-                <label>
-                  <input type="checkbox" defaultChecked />
-                  Motion Gating
-                </label>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Zone Settings */}
         <div className="config-section">

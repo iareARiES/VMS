@@ -38,10 +38,16 @@ export class WebSocketClient {
   
   connect() {
     try {
+      // Close existing connection if any
+      if (this.ws) {
+        this.ws.close()
+        this.ws = null
+      }
+      
       this.ws = new WebSocket(this.url)
       
       this.ws.onopen = () => {
-        console.log(`Connected to ${this.url}`)
+        console.log(`✅ Connected to ${this.url}`)
         this.reconnectAttempts = 0
       }
       
@@ -59,18 +65,24 @@ export class WebSocketClient {
       }
       
       this.ws.onerror = (error) => {
-        console.error(`WebSocket error on ${this.url}:`, error)
+        // Only log if not already closing/closed (to reduce spam)
+        if (this.ws?.readyState !== WebSocket.CLOSING && this.ws?.readyState !== WebSocket.CLOSED) {
+          console.warn(`WebSocket connection issue on ${this.url} (will retry)`)
+        }
         if (this.onError) {
           this.onError(error)
         }
       }
       
-      this.ws.onclose = () => {
-        console.log(`Disconnected from ${this.url}`)
+      this.ws.onclose = (event) => {
+        // Only log unexpected disconnections
+        if (event.code !== 1000 && event.code !== 1001) {
+          console.log(`Disconnected from ${this.url} (code: ${event.code})`)
+        }
         this.reconnect()
       }
     } catch (error) {
-      console.error(`Failed to connect to ${this.url}:`, error)
+      console.error(`Failed to create WebSocket connection to ${this.url}:`, error)
       this.reconnect()
     }
   }
@@ -79,8 +91,12 @@ export class WebSocketClient {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000)
-      console.log(`Reconnecting in ${delay}ms...`)
+      if (this.reconnectAttempts <= 3) {  // Only log first few attempts
+        console.log(`Reconnecting in ${delay}ms...`)
+      }
       setTimeout(() => this.connect(), delay)
+    } else {
+      console.error(`Max reconnection attempts (${this.maxReconnectAttempts}) reached for ${this.url}`)
     }
   }
   

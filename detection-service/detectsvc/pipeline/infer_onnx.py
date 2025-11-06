@@ -36,12 +36,63 @@ class InferencePipeline:
         """Unload all models."""
         self.runners.clear()
     
+    def infer_frame_fast(
+        self,
+        frame: np.ndarray,
+        enabled_models: List[Dict]
+    ) -> List[Detection]:
+        """Run raw inference with minimal overhead - maximum speed."""
+        all_detections = []
+        
+        # Streamlined processing - no safety checks, minimal overhead
+        for model_config in enabled_models:
+            model_name = model_config["name"]
+            
+            # Skip if not loaded (minimal check)
+            if model_name not in self.runners:
+                continue
+            
+            runner = self.runners[model_name]
+            
+            # Raw inference - no try/catch for maximum speed
+            detections = runner.infer(frame)
+            
+            # Filter by confidence AND enabled classes
+            conf_threshold = model_config.get("conf", 0.25)  # Lower default for max detections
+            enabled_classes = model_config.get("enabled_classes", {})
+            
+            raw_count = len(detections)
+            filtered_count = 0
+            
+            for det in detections:
+                # Check confidence threshold
+                if det.conf < conf_threshold:
+                    continue
+                
+                # Check if class is enabled (if enabled_classes is provided, use it; otherwise allow all)
+                if enabled_classes:
+                    is_enabled = enabled_classes.get(det.cls, False)
+                    if not is_enabled:
+                        continue
+                
+                det.model_name = model_name
+                all_detections.append(det)
+                filtered_count += 1
+            
+            # Debug logging (occasionally)
+            self._debug_counter += 1
+            if self._debug_counter % 100 == 0:  # Every 100 frames
+                enabled_list = [cls for cls, enabled in enabled_classes.items() if enabled] if enabled_classes else ["all"]
+                print(f"[{model_name}] Raw: {raw_count}, After filter: {filtered_count}, Enabled classes: {enabled_list}, Conf threshold: {conf_threshold}")
+        
+        return all_detections
+    
     def infer_frame(
         self,
         frame: np.ndarray,
         enabled_models: List[Dict]
     ) -> List[Detection]:
-        """Run inference on frame with class filtering."""
+        """Run inference on frame with class filtering (full mode)."""
         all_detections = []
         
         # Only process models that are both enabled AND loaded

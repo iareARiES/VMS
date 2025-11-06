@@ -23,10 +23,15 @@ class Settings(BaseSettings):
     # Models
     models_root: str = "models"  # Relative to project root, override in .env
     
-    # Inference
+    # Inference - Maximum performance settings
     infer_device: str = "onnx_cpu"  # onnx_cpu, hailo, coral
-    target_fps: int = 20  # Target FPS for detection (higher = lower latency, more CPU)
-    frame_skip: int = 1  # Process every frame (1 = no skipping, 2 = every 2nd frame, etc.)
+    target_fps: int = 120  # Maximum FPS for native script-like performance
+    frame_skip: int = 1  # Process every frame (no skipping for maximum responsiveness)
+    min_sleep_time: float = 0.0001  # Ultra-minimal sleep time (0.1ms) 
+    
+    # Performance mode flags
+    raw_inference_mode: bool = True  # Skip tracking, zones, WebSocket for max speed
+    cache_enabled_models: bool = True  # Cache model list to avoid registry lookups
     
     # Storage
     storage_root: str = "storage"  # Relative to project root, override in .env

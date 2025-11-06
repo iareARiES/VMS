@@ -12,7 +12,7 @@ class VideoCapture:
         self.cap = None
     
     def open(self):
-        """Open capture with low-latency settings."""
+        """Open capture with maximum performance optimizations."""
         try:
             if isinstance(self.source, (str, Path)):
                 source_str = str(self.source)
@@ -27,19 +27,26 @@ class VideoCapture:
             if not self.cap.isOpened():
                 raise RuntimeError(f"Failed to open video source: {self.source}. Camera may not be available or already in use.")
             
-            # Optimize for low latency: reduce buffer size
-            # Set buffer size to 1 to minimize latency (always get latest frame)
+            # Maximum performance optimizations
             try:
+                # Minimal buffer for lowest latency (like native scripts)
                 self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-            except:
-                pass  # Some backends don't support this
-            
-            # Try to set FPS if it's a camera
-            try:
+                
+                # High FPS for cameras
                 if isinstance(self.source, int) or (isinstance(self.source, str) and source_str.isdigit()):
-                    self.cap.set(cv2.CAP_PROP_FPS, 30)  # Request 30 FPS from camera
+                    self.cap.set(cv2.CAP_PROP_FPS, 60)  # Try 60 FPS first
+                    
+                # Optimize threading and backend
+                self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+                
+                # Disable auto-exposure for consistent timing (if supported)
+                try:
+                    self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # Manual exposure
+                except:
+                    pass
+                    
             except:
-                pass  # Some cameras don't support FPS setting
+                pass  # Some backends don't support these optimizations
                 
         except Exception as e:
             if isinstance(e, RuntimeError):
@@ -47,25 +54,17 @@ class VideoCapture:
             raise RuntimeError(f"Error initializing video capture: {str(e)}")
     
     def read(self) -> Optional[tuple]:
-        """Read latest frame (drops old frames to reduce latency)."""
+        """Read frame with maximum speed (like native OpenCV scripts)."""
         if self.cap is None:
             return None
         
-        # For low latency: grab frames until we get the latest one
-        # This ensures we always process the most recent frame, not a buffered one
-        ret = False
-        frame = None
-        
-        # Grab frames to clear buffer (get latest frame)
-        # Grab 2-3 times to ensure we get the latest frame
-        for _ in range(2):
-            if self.cap.grab():
-                ret, frame = self.cap.retrieve()
-            else:
-                break
+        # Native OpenCV approach: direct read() for maximum speed
+        # This is exactly how you'd do it in a traditional Python script
+        ret, frame = self.cap.read()
         
         if ret and frame is not None:
             return frame
+        
         return None
     
     def release(self):

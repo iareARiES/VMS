@@ -17,10 +17,30 @@ class ONNXCPURunner(AcceleratorRunner):
         self.class_names = []
     
     def load(self, model_path: Path):
-        """Load ONNX model."""
-        providers = ['CPUExecutionProvider']
+        """Load ONNX model with MAXIMUM performance optimizations."""
+        # Ultra-aggressive ONNX Runtime optimization for raw speed
+        sess_options = ort.SessionOptions()
+        sess_options.enable_cpu_mem_arena = True
+        sess_options.enable_mem_pattern = True
+        sess_options.enable_mem_reuse = True
+        sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        sess_options.execution_mode = ort.ExecutionMode.ORT_PARALLEL  # Changed to parallel for max speed
+        sess_options.inter_op_num_threads = 0  # Use all available threads
+        sess_options.intra_op_num_threads = 0  # Use all available threads
+        sess_options.log_severity_level = 3  # Disable logging for speed
+        sess_options.enable_profiling = False  # Disable profiling
+        
+        # Ultra-optimized CPU provider settings
+        providers = [('CPUExecutionProvider', {
+            'arena_extend_strategy': 'kSameAsRequested',
+            'enable_cpu_mem_arena': True,
+            'memory_pattern_optimization': True,
+            'use_arena': True,
+        })]
+        
         self.session = ort.InferenceSession(
             str(model_path),
+            sess_options=sess_options,
             providers=providers
         )
         
@@ -104,13 +124,16 @@ class ONNXCPURunner(AcceleratorRunner):
         if w <= 0 or h <= 0:
             raise ValueError(f"Invalid input shape: ({h}, {w})")
         
-        # Resize image to model input size
-        resized = cv2.resize(image, (w, h))
-        input_tensor = resized.transpose(2, 0, 1).astype(np.float32) / 255.0
-        input_tensor = np.expand_dims(input_tensor, axis=0)
+        # Ultra-optimized preprocessing for maximum inference speed
+        # Use INTER_NEAREST for fastest resize (slight quality trade-off for speed)
+        resized = cv2.resize(image, (w, h), interpolation=cv2.INTER_NEAREST)
         
-        # Run inference
-        outputs = self.session.run(self.output_names, {self.input_name: input_tensor})
+        # Fastest possible normalization: pre-allocate and use in-place operations
+        input_tensor = np.empty((1, 3, h, w), dtype=np.float32)
+        input_tensor[0] = resized.transpose(2, 0, 1).astype(np.float32) * (1.0/255.0)
+        
+        # Run inference - direct call for maximum speed
+        outputs = self.session.run(None, {self.input_name: input_tensor})  # None = all outputs
         
         # Postprocess (YOLO format)
         detections = self._postprocess(outputs[0], image.shape[:2])
